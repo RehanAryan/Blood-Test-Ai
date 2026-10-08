@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BloodReport AI | Laboratory Biomarker Analysis &amp; Longitudinal Health Trends</title>
+  <meta name="description" content="AI-powered blood test analysis platform that extracts lab values, compares with reference ranges, tracks longitudinal health trends, and generates simple educational summaries.">
+
+  <!-- Google Fonts: Plus Jakarta Sans, Space Grotesk, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js 4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- PDF text extraction (pdf.js) for uploaded PDF reports -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- OCR for scanned report photos (tesseract.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ============================================================
+       MANDATORY MEDICAL DISCLAIMER BANNER (Spec Requirement)
+       ============================================================ -->
+  <div class="disclaimer-banner">
+    <i data-lucide="info" style="width: 16px; height: 16px;"></i>
+    <span><strong>Important Notice:</strong> AI-generated information is for educational purposes only and does not replace professional medical advice.</span>
+  </div>
+
+  <!-- ============================================================
+       LEFT SIDEBAR NAVIGATION (Home, Dashboard, Upload, Analysis,
+       Comparison, AI Summary, Previous Reports — top to bottom)
+       ============================================================ -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-title" onclick="navigateTo('viewLanding')">
+        <div class="brand-icon">
+          <i data-lucide="activity"></i>
+        </div>
+        <div>
+          <h1>BloodReport <span style="color: var(--teal-primary);">AI</span></h1>
+        </div>
+      </div>
+
+      <!-- Nav Links -->
+      <nav class="nav-links" aria-label="Main Navigation">
+        <span class="nav-caption">Menu</span>
+        <a class="nav-link active" data-view="viewLanding" onclick="navigateTo('viewLanding')">
+          <i data-lucide="home" style="width: 16px; height: 16px;"></i> Home
+        </a>
+        <a class="nav-link" data-view="viewDashboard" onclick="navigateTo('viewDashboard')">
+          <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Dashboard
+        </a>
+        <a class="nav-link" data-view="viewUpload" onclick="navigateTo('viewUpload')">
+          <i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i> Upload Report
+        </a>
+        <a class="nav-link" data-view="viewAnalysis" onclick="navigateTo('viewAnalysis')">
+          <i data-lucide="table" style="width: 16px; height: 16px;"></i> Report Analysis
+        </a>
+        <a class="nav-link" data-view="viewComparison" onclick="navigateTo('viewComparison')">
+          <i data-lucide="git-compare" style="width: 16px; height: 16px;"></i> Comparison
+        </a>
+        <a class="nav-link" data-view="viewAISummary" onclick="navigateTo('viewAISummary')">
+          <i data-lucide="brain" style="width: 16px; height: 16px;"></i> AI Summary
+        </a>
+        <a class="nav-link" data-view="viewHistory" onclick="navigateTo('viewHistory')">
+          <i data-lucide="history" style="width: 16px; height: 16px;"></i> Previous Reports
+        </a>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <button class="btn btn-secondary no-print" onclick="navigateTo('viewDoctorSummary')" title="View Printable Doctor-Ready Summary">
+          <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
+          <span>Doctor Summary</span>
+        </button>
+
+        <button id="themeToggleBtn" class="btn-icon no-print" title="Toggle Light/Dark Theme">
+          <i data-lucide="moon" id="themeIcon" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+    <!-- ============================================================
+         PAGE 1: LANDING PAGE
+         ============================================================ -->
+    <section id="viewLanding" class="page-view active">
+      <div class="landing-hero">
+        <div class="hero-tag">
+          <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+          Educational &amp; Non-Diagnostic Health Intelligence
+        </div>
+        <h2 class="hero-title">Understand Your Blood Test Results <br><span>With Clarity &amp; Confidence</span></h2>
+        <p class="hero-desc">
+          Upload your clinical laboratory reports, automatically extract test values, compare with printed reference ranges, track your progress over time, and receive simple AI-powered explanations.
+        </p>
+        <div class="hero-cta-group">
+          <button class="btn btn-primary btn-lg" onclick="navigateTo('viewUpload')">
+            <i data-lucide="upload-cloud" style="width: 20px; height: 20px;"></i>
+            Upload Your Blood Report
+          </button>
+          <button class="btn btn-secondary btn-lg" onclick="navigateTo('viewDashboard')">
+            <i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
+            Explore Health Dashboard
+          </button>
+        </div>
+        <div class="hero-stats">
+          <span class="hero-stat-chip"><strong>35+</strong> biomarkers recognized</span>
+          <span class="hero-stat-chip"><strong>PDF + photo</strong> OCR ingestion</span>
+          <span class="hero-stat-chip"><strong>3-test</strong> trend overlays</span>
+        </div>
+      </div>
+
+      <!-- Main Features Grid -->
+      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; text-align: center;">Core Capabilities</h3>
+      <div class="landing-features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-box"><i data-lucide="file-search"></i></div>
+          <h4 class="feature-title">Smart OCR &amp; PDF Ingestion</h4>
+          <p class="feature-desc">Upload PDF reports or camera photos. Verify extracted laboratory values with an editable table before running analysis.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box"><i data-lucide="scale"></i></div>
+          <h4 class="feature-title">Laboratory Reference Ranges</h4>
+          <p class="feature-desc">Values are evaluated against the reference range printed on your lab report, with validated standard ranges available as fallback.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box"><i data-lucide="trending-up"></i></div>
+          <h4 class="feature-title">Longitudinal Trend Analysis</h4>
+          <p class="feature-desc">Compare current results with previous visits. Interactive charts visualize whether values are moving toward or away from normal intervals.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box"><i data-lucide="message-square-heart"></i></div>
+          <h4 class="feature-title">Simple-Language AI Summary</h4>
+          <p class="feature-desc">Receive an easy-to-read breakdown of improved, worsened, and abnormal results, plus tailored questions to discuss with your doctor.</p>
+        </div>
+      </div>
+
+      <!-- Previous vs Current Comparison Preview Widget -->
+      <div class="preview-banner">
+        <div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--teal-primary); text-transform: uppercase;">Comparison Preview</span>
+          <h3 style="font-size: 1.6rem; font-weight: 700; margin: 8px 0 14px 0;">Track Biomarker Trajectories Across Visits</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">
+            BloodReport AI recognizes that an increase is not always an improvement (for example, dropping LDL cholesterol is favorable, while rising Vitamin D is also favorable).
+          </p>
+          <button class="btn btn-secondary" onclick="navigateTo('viewComparison')">
+            View Longitudinal Comparison <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+
+        <div class="sample-metric-box">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <strong style="font-size: 1.1rem;">Vitamin D (25-OH)</strong>
+            <span class="badge-trend improving"><i data-lucide="trending-up" style="width: 12px; height: 12px;"></i> Improving</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; margin-bottom: 12px;">
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Previous (June):</span><br>
+              <span style="font-family: var(--font-mono); font-weight: 700;">15.0 ng/mL</span>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Current (October):</span><br>
+              <span style="font-family: var(--font-mono); font-weight: 700; color: var(--teal-primary);">29.0 ng/mL</span>
+            </div>
+          </div>
+          <div style="background: var(--bg-surface); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.84rem; display: flex; justify-content: space-between;">
+            <span>Absolute Change: <strong>+14.0 ng/mL</strong></span>
+            <span style="color: var(--status-normal);">Progressing to Normal Target</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy & Security Section -->
+      <div class="security-section">
+        <h3 style="font-size: 1.35rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="lock" style="color: var(--blue-accent);"></i> Security, Privacy &amp; Data Ethics
+        </h3>
+        <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 6px;">
+          Your medical records belong strictly to you. BloodReport AI adheres to essential data protection principles:
+        </p>
+        <div class="security-grid">
+          <div class="security-item">
+            <i data-lucide="check-circle-2"></i>
+            <div>
+              <strong>No Public Exposure</strong>
+              <p style="font-size: 0.82rem; color: var(--text-secondary);">Uploaded reports are never publicly accessible or indexed.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <i data-lucide="check-circle-2"></i>
+            <div>
+              <strong>Strict File Validation</strong>
+              <p style="font-size: 0.82rem; color: var(--text-secondary);">Uploads are restricted to legitimate PDF and image file types with size validation.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <i data-lucide="check-circle-2"></i>
+            <div>
+              <strong>User Data Control</strong>
+              <p style="font-size: 0.82rem; color: var(--text-secondary);">You have the permanent right to delete stored reports and results at any time.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <i data-lucide="check-circle-2"></i>
+            <div>
+              <strong>Data Minimization</strong>
+              <p style="font-size: 0.82rem; color: var(--text-secondary);">We only store variables directly needed for clinical interpretation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 3: UPLOAD REPORT & OCR REVIEW
+         ============================================================ -->
+    <section id="viewUpload" class="page-view">
+      <div style="max-width: 960px; margin: 0 auto;">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">Upload Blood Test Report</h3>
+        <p style="font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 24px;">
+          Supports PDF reports, JPG, or PNG scans. File data is processed locally with OCR text extraction.
+        </p>
+
+        <!-- Drop Box -->
+        <div class="upload-box" id="uploadDropZone" onclick="document.getElementById('reportFileInput').click()">
+          <input type="file" id="reportFileInput" accept=".pdf,.png,.jpg,.jpeg,.txt" style="display: none;" onchange="handleFileSelect(event)">
+          <div class="upload-icon-circle">
+            <i data-lucide="upload-cloud" style="width: 32px; height: 32px;"></i>
+          </div>
+          <h4 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 8px;">Drag &amp; Drop Blood Report File Here</h4>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 480px; margin: 0 auto 16px auto;">
+            Accepts official lab PDFs (text extracted automatically), report photos (JPG/PNG with OCR), or TXT files. Maximum file size: 16 MB.
+          </p>
+          <button type="button" class="btn btn-primary" onclick="event.stopPropagation(); document.getElementById('reportFileInput').click();">
+            Browse Files from Device
+          </button>
+
+          <!-- Upload Progress Animation -->
+          <div class="upload-progress-container" id="uploadProgressContainer">
+            <span id="uploadProgressText" style="font-size: 0.85rem; font-weight: 600; color: var(--teal-primary);">Extracting Text &amp; Values via Gemini AI...</span>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="uploadProgressBarFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Or Paste Lab Text Directly with Gemini AI -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <h4 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="file-text" style="color: var(--teal-primary);"></i> Or Paste Raw Blood Report Text
+            </h4>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loadSampleTextIntoInput()">
+              <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--teal-primary);"></i> Insert Sample Lab Text
+            </button>
+          </div>
+          <textarea id="rawReportTextInput" class="form-input" style="min-height: 120px; font-family: var(--font-mono); font-size: 0.86rem; margin-bottom: 14px;" placeholder="Paste test results here... e.g.:
+Fasting Glucose: 114 mg/dL (Reference: 70 - 99)
+Total Cholesterol: 238 mg/dL (Reference: < 200)
+LDL Cholesterol: 162 mg/dL (Reference: < 100)
+Vitamin D: 29 ng/mL (Reference: 30 - 100)"></textarea>
+          <div class="btn-group-end">
+            <button type="button" class="btn btn-primary" onclick="processTextWithGemini()">
+              <i data-lucide="bot" style="width: 16px; height: 16px;"></i> Extract Biomarkers with Gemini AI
+            </button>
+          </div>
+        </div>
+
+        <!-- Editable OCR Extraction Review Table (Spec Requirement) -->
+        <div class="ocr-review-container" id="ocrReviewContainer">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <h4 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="check-square" style="color: var(--teal-primary);"></i> Verify Extracted Laboratory Values
+              </h4>
+              <p style="font-size: 0.84rem; color: var(--text-secondary);">
+                Please review the values detected by OCR. You can edit any value, unit, or range before saving.
+              </p>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-secondary" onclick="addNewOcrRow()">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Test
+              </button>
+              <button class="btn btn-primary" onclick="confirmOcrAndAnalyze()">
+                <i data-lucide="check" style="width: 16px; height: 16px;"></i> Confirm &amp; Analyze Report
+              </button>
+            </div>
+          </div>
+
+          <div class="ocr-table-wrapper">
+            <table class="ocr-table" id="ocrReviewTable">
+              <thead>
+                <tr>
+                  <th>Test Name</th>
+                  <th>Value</th>
+                  <th>Unit</th>
+                  <th>Ref Low</th>
+                  <th>Ref High</th>
+                  <th>Source</th>
+                  <th style="width: 60px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="ocrTableBody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 7: DASHBOARD CARDS & OVERVIEW
+         ============================================================ -->
+    <section id="viewDashboard" class="page-view">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 24px;">
+        <div>
+          <h3 style="font-size: 1.5rem; font-weight: 700;">Clinical Health Dashboard</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">
+            Active Report: <strong id="dashActiveDate">October 04, 2026</strong>
+          </p>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="navigateTo('viewComparison')">
+            <i data-lucide="git-compare" style="width: 16px; height: 16px;"></i> Compare Reports
+          </button>
+          <button class="btn btn-primary" onclick="navigateTo('viewAISummary')">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i> View AI Summary
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Primary KPI Cards (Spec Requirement: NORMAL, LOW, HIGH, NEEDS ATTENTION) -->
+      <div class="dashboard-kpi-grid">
+        <!-- NORMAL CARD -->
+        <div class="kpi-card normal">
+          <div class="kpi-header">
+            <span class="kpi-title">NORMAL</span>
+            <i data-lucide="check-circle" style="color: var(--status-normal); width: 22px; height: 22px;"></i>
+          </div>
+          <div class="kpi-number" id="dashNormalCount" style="color: var(--status-normal);">11</div>
+          <div class="kpi-subtext">Within optimal reference interval</div>
+        </div>
+
+        <!-- LOW CARD -->
+        <div class="kpi-card low">
+          <div class="kpi-header">
+            <span class="kpi-title">LOW</span>
+            <i data-lucide="arrow-down-circle" style="color: var(--status-low); width: 22px; height: 22px;"></i>
+          </div>
+          <div class="kpi-number" id="dashLowCount" style="color: var(--status-low);">1</div>
+          <div class="kpi-subtext">Below reference interval</div>
+        </div>
+
+        <!-- HIGH CARD -->
+        <div class="kpi-card high">
+          <div class="kpi-header">
+            <span class="kpi-title">HIGH</span>
+            <i data-lucide="arrow-up-circle" style="color: var(--status-high); width: 22px; height: 22px;"></i>
+          </div>
+          <div class="kpi-number" id="dashHighCount" style="color: var(--status-high);">3</div>
+          <div class="kpi-subtext">Above standard reference limit</div>
+        </div>
+
+        <!-- NEEDS ATTENTION CARD -->
+        <div class="kpi-card urgent">
+          <div class="kpi-header">
+            <span class="kpi-title">NEEDS ATTENTION</span>
+            <i data-lucide="alert-octagon" style="color: var(--status-urgent); width: 22px; height: 22px;"></i>
+          </div>
+          <div class="kpi-number" id="dashAttentionCount" style="color: var(--status-urgent);">2</div>
+          <div class="kpi-subtext">Marked deviation or clinical focus</div>
+        </div>
+      </div>
+
+      <!-- Secondary Metrics Bar (Spec Requirement) -->
+      <div class="dashboard-metrics-summary">
+        <div class="summary-metric">
+          <i data-lucide="clipboard-list" style="color: var(--teal-primary);"></i>
+          <span>Total Tests Analyzed: <strong id="dashTotalCount">17</strong></span>
+        </div>
+        <div class="summary-metric">
+          <i data-lucide="alert-triangle" style="color: var(--status-high);"></i>
+          <span>Abnormal Results: <strong id="dashAbnormalCount">6</strong></span>
+        </div>
+        <div class="summary-metric">
+          <i data-lucide="trending-up" style="color: var(--status-normal);"></i>
+          <span>Improved Results: <strong id="dashImprovedCount" style="color: var(--status-normal);">5</strong></span>
+        </div>
+        <div class="summary-metric">
+          <i data-lucide="trending-down" style="color: var(--status-urgent);"></i>
+          <span>Worsened Results: <strong id="dashWorsenedCount" style="color: var(--status-urgent);">0</strong></span>
+        </div>
+        <div class="summary-metric">
+          <i data-lucide="activity" style="color: var(--blue-accent);"></i>
+          <span>Overall Trend: <strong id="dashOverallTrend" style="color: var(--status-normal);">Improving</strong></span>
+        </div>
+      </div>
+
+      <!-- Health Goals & Retest Reminders -->
+      <div class="dashboard-duo-grid">
+        <div class="table-card" style="margin-bottom: 0;">
+          <div class="table-controls" style="margin-bottom: 12px;">
+            <h4 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="target" style="color: var(--teal-primary); width: 18px; height: 18px;"></i> My Health Goals
+            </h4>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">
+            Set a target for any biomarker from its detail view and track progress here.
+          </p>
+          <div id="goalsList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom: 0;">
+          <div class="table-controls" style="margin-bottom: 12px;">
+            <h4 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="bell-ring" style="color: var(--blue-accent); width: 18px; height: 18px;"></i> Retest Reminders
+            </h4>
+          </div>
+          <div class="btn-group" style="margin-bottom: 12px;">
+            <select id="reminderTestSelect" class="form-select" style="flex: 1; min-width: 150px; padding: 7px 12px; font-size: 0.86rem;">
+              <!-- Populated from uploaded reports -->
+            </select>
+            <input type="date" id="reminderDateInput" class="form-input" style="width: 150px; padding: 7px 12px; font-size: 0.86rem;">
+            <button class="btn btn-primary btn-sm" onclick="addReminder()">
+              <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add
+            </button>
+          </div>
+          <div id="remindersList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Table Preview -->
+      <div class="table-card">
+        <div class="table-controls">
+          <h4 style="font-size: 1.15rem; font-weight: 700;">Biomarkers Overview</h4>
+          <button class="btn btn-secondary" onclick="navigateTo('viewAnalysis')">
+            Open Full Analysis Table <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Test Name</th>
+                <th>Current Result</th>
+                <th>Unit</th>
+                <th>Reference Range</th>
+                <th>Status</th>
+                <th>Previous</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody id="dashPreviewTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 4: REPORT ANALYSIS TABLE (Spec Requirement)
+         ============================================================ -->
+    <section id="viewAnalysis" class="page-view">
+      <div class="table-card">
+        <div class="table-controls">
+          <div>
+            <h3 style="font-size: 1.4rem; font-weight: 700;">Complete Report Analysis</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Click on any row to open the detailed physiological explanation and interactive trend graph.
+            </p>
+            <p id="analysisActiveReport" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;"></p>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="search-box">
+              <i data-lucide="search" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+              <input type="text" id="analysisSearchInput" placeholder="Search test name..." oninput="filterAnalysisTable()">
+            </div>
+            <select id="analysisStatusFilter" class="form-select" style="width: 150px; padding: 7px 12px;" onchange="filterAnalysisTable()">
+              <option value="all">All Statuses</option>
+              <option value="Normal">Normal</option>
+              <option value="Low">Low</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="data-table-wrapper">
+          <table class="data-table" id="fullAnalysisTable">
+            <thead>
+              <tr>
+                <th>Test Name</th>
+                <th>Current Result</th>
+                <th>Unit</th>
+                <th>Reference Range</th>
+                <th>Status</th>
+                <th>Previous Result</th>
+                <th>Change</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="fullAnalysisTableBody">
+              <!-- Injected dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 5: PREVIOUS VS CURRENT COMPARISON (Spec Requirement)
+         ============================================================ -->
+    <section id="viewComparison" class="page-view">
+      <div class="comparison-selectors-card">
+        <div>
+          <h3 style="font-size: 1.35rem; font-weight: 700;">Previous vs. Current Report Comparison</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">
+            Compare two reports to calculate absolute changes, percentage changes, and clinical direction.
+          </p>
+        </div>
+
+        <div class="selector-pair">
+          <div class="selector-col">
+            <label class="form-label" style="font-size: 0.8rem; margin: 0;">Previous Report</label>
+            <select id="compPrevSelect" class="form-select" onchange="runComparisonEngine()">
+              <!-- Populated from uploaded reports via refreshReportSelectors() -->
+            </select>
+          </div>
+
+          <div style="font-weight: 700; color: var(--text-muted); margin-top: 20px;">vs</div>
+
+          <div class="selector-col">
+            <label class="form-label" style="font-size: 0.8rem; margin: 0;">Current Report</label>
+            <select id="compCurrSelect" class="form-select" onchange="runComparisonEngine()">
+              <!-- Populated from uploaded reports via refreshReportSelectors() -->
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Chart.js Graph (Spec Requirement) -->
+      <div class="chart-card-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <h4 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="line-chart" style="color: var(--teal-primary);"></i> Interactive Biomarker Trend Graph
+            </h4>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Progression across your uploaded reports</span>
+          </div>
+          <div>
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Overlay up to 3 tests</div>
+            <div id="trendOverlayChecks" class="check-chip-group">
+              <!-- Populated from uploaded reports via refreshReportSelectors() -->
+            </div>
+          </div>
+        </div>
+        <div style="height: 290px; position: relative;">
+          <canvas id="comparisonTrendCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Comparison Detailed Table -->
+      <div class="table-card">
+        <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Biomarker Delta &amp; Clinical Trend Matrix</h4>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Test Name</th>
+                <th>Unit</th>
+                <th>Previous Value</th>
+                <th>Current Value</th>
+                <th>Absolute Change</th>
+                <th>Percentage Change</th>
+                <th>Clinical Trend</th>
+              </tr>
+            </thead>
+            <tbody id="comparisonTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 6: AI SUMMARY (Spec Requirement)
+         ============================================================ -->
+    <section id="viewAISummary" class="page-view">
+      <div class="ai-summary-container">
+        <!-- Main AI Narrative Card -->
+        <div class="ai-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="brand-icon" style="width: 34px; height: 34px;">
+                <i data-lucide="bot" style="width: 18px; height: 18px;"></i>
+              </div>
+              <div>
+                <h3 style="font-size: 1.35rem; font-weight: 700;">AI Educational Health Summary</h3>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">Non-diagnostic clinical synthesis • Powered by Gemini AI</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateDynamicAISummary()">
+              <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i> Generate with Gemini
+            </button>
+          </div>
+
+          <!-- Loading State -->
+          <div id="aiSummaryLoading" class="ai-loading-box">
+            <div class="ai-pulse-spinner"></div>
+            <p style="font-weight: 600; color: var(--teal-primary);">Gemini AI is analyzing biomarker trends &amp; clinical context...</p>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">Synthesizing educational plain-language narrative...</p>
+          </div>
+
+          <div id="aiSummaryContent">
+            <p style="font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px;" id="aiNarrativeText">
+              Upload a report or click <strong>"Generate with Gemini"</strong> above to produce a personalized, plain-language educational breakdown of your current blood work.
+            </p>
+
+            <!-- Categorized Pillars -->
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div class="ai-pill-item green">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--status-normal); display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="trending-up"></i> Improved Values
+                </h4>
+                <ul style="margin: 6px 0 0 20px; font-size: 0.88rem; color: var(--text-secondary);" id="aiImprovedList">
+                  <li style="color: var(--text-muted);">No improved values analyzed yet.</li>
+                </ul>
+              </div>
+
+              <div class="ai-pill-item orange">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--status-high); display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="alert-circle"></i> Values That Need Attention
+                </h4>
+                <ul style="margin: 6px 0 0 20px; font-size: 0.88rem; color: var(--text-secondary);" id="aiAttentionList">
+                  <li style="color: var(--text-muted);">No flagged values analyzed yet.</li>
+                </ul>
+              </div>
+
+              <div class="ai-pill-item red" id="aiWorsenedContainer" style="display: none;">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--status-urgent); display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="trending-down"></i> Worsened Values
+                </h4>
+                <ul style="margin: 6px 0 0 20px; font-size: 0.88rem; color: var(--text-secondary);" id="aiWorsenedList"></ul>
+              </div>
+            </div>
+
+            <!-- Doctor Discussion Questions Box -->
+            <div class="doctor-questions-box" style="margin-top: 24px;">
+              <h4 style="font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--blue-accent);">
+                <i data-lucide="help-circle"></i> Questions to Discuss With Your Healthcare Professional
+              </h4>
+              <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 6px 0 16px 0;">
+                Prioritized inquiries prepared for your next consultation:
+              </p>
+              <div id="aiDoctorQuestionsList">
+                <p style="font-size: 0.86rem; color: var(--text-muted);">Questions will be tailored to your specific lab results once analyzed.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Educational Sidebar Card -->
+        <div class="ai-card">
+          <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="shield-alert" style="color: var(--teal-primary);"></i> Clinical Boundaries
+          </h4>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
+            <p><strong>No Medical Diagnosis:</strong> This system does not diagnose diseases or conditions.</p>
+            <p><strong>No Medication Prescriptions:</strong> We never recommend altering, stopping, or starting prescription drugs.</p>
+            <p><strong>Laboratory Variations:</strong> Reference ranges may differ between individual laboratories and patient circumstances.</p>
+          </div>
+
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <button class="btn btn-primary btn-block" onclick="navigateTo('viewDoctorSummary')">
+              <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Prepare Doctor-Ready Summary
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 8: PREVIOUS REPORTS (Spec Requirement)
+         ============================================================ -->
+    <section id="viewHistory" class="page-view">
+      <div style="max-width: 900px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <div>
+            <h3 style="font-size: 1.5rem; font-weight: 700;">Previous Reports</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Review previous laboratory reports stored in your personal health timeline.
+            </p>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-secondary" onclick="eraseAllData()" title="Permanently erase all stored reports and uploaded files">
+              <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Erase All Data
+            </button>
+            <button class="btn btn-primary" onclick="navigateTo('viewUpload')">
+              <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Upload New Report
+            </button>
+          </div>
+        </div>
+
+        <div class="history-timeline" id="historyTimelineContainer">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PAGE 10: DOCTOR-READY SUMMARY (PRINTABLE VIEW)
+         ============================================================ -->
+    <section id="viewDoctorSummary" class="page-view">
+      <div class="btn-group-end no-print" style="margin-bottom: 16px;">
+        <button class="btn btn-primary" onclick="window.print()">
+          <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Print / Download PDF
+        </button>
+      </div>
+
+      <div class="printable-doctor-summary">
+        <div class="doctor-doc-header">
+          <div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: #0d9488;">
+              BloodReport AI • Clinical Summary Sheet
+            </h2>
+            <span style="font-size: 0.84rem; color: #64748b;">
+              Generated for Physician Review • Educational Health Record
+            </span>
+          </div>
+          <div style="text-align: right; font-size: 0.85rem;">
+            <strong>Date Generated:</strong> <span id="docSummaryDate">October 08, 2026</span><br>
+            <strong>Lab Facility:</strong> Metro Health Clinical Laboratories
+          </div>
+        </div>
+
+        <!-- Patient Demographics Box (Firebase: bind patient profile here after integration) -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 0.88rem;">
+          <div><strong>Patient Name:</strong><br><span id="docPatientName">—</span></div>
+          <div><strong>Age / Sex:</strong><br><span id="docPatientAgeSex">—</span></div>
+          <div><strong>Report Date:</strong><br><span id="docReportDate">October 04, 2026</span></div>
+        </div>
+
+        <!-- Important Abnormal Results Table -->
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: #dc2626;">
+          1. Important Abnormal Results
+        </h4>
+        <table class="data-table" style="margin-bottom: 24px;">
+          <thead>
+            <tr style="background: #f1f5f9;">
+              <th>Test Name</th>
+              <th>Current Result</th>
+              <th>Reference Range</th>
+              <th>Status</th>
+              <th>Clinical Note</th>
+            </tr>
+          </thead>
+          <tbody id="docSummaryAbnormalBody">
+            <!-- Dynamically populated from active report -->
+          </tbody>
+        </table>
+
+        <!-- Major Changes from Previous Report -->
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: #0284c7;">
+          2. Major Changes From Previous Report
+        </h4>
+        <ul style="margin: 0 0 24px 24px; font-size: 0.9rem; line-height: 1.6;" id="docSummaryChangesList">
+          <!-- Dynamically populated from comparison -->
+        </ul>
+
+        <!-- Questions to Discuss with Physician -->
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: #0d9488;">
+          3. Patient Consultation Agenda &amp; Questions (Powered by Gemini)
+        </h4>
+        <ol style="margin: 0 0 24px 24px; font-size: 0.9rem; line-height: 1.6;" id="docSummaryQuestionsList">
+          <!-- Dynamically populated from Gemini AI summary -->
+        </ol>
+
+        <div style="font-size: 0.78rem; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 20px;">
+          DISCLAIMER: AI-generated information is for educational purposes only and does not replace professional medical advice.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       PAGE 9 & MODAL: TEST DETAIL VIEW (Spec Requirement)
+       ============================================================ -->
+  <div class="modal-overlay" id="testDetailModal" onclick="closeModal('testDetailModal')">
+    <div class="modal-content-card" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <h3 id="modalDetailTitle" style="font-size: 1.35rem; font-weight: 700;">Test Name</h3>
+          <span id="modalDetailSubtitle" style="font-size: 0.84rem; color: var(--text-secondary);">Laboratory Biomarker Analysis</span>
+        </div>
+        <button class="btn-icon" onclick="closeModal('testDetailModal')">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <!-- Values Box -->
+      <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; text-align: center;">
+        <div>
+          <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Current Result</span>
+          <div id="modalDetailCurrentVal" style="font-size: 1.6rem; font-weight: 800; font-family: var(--font-mono); color: var(--text-main);">0.0</div>
+          <span id="modalDetailUnit" style="font-size: 0.8rem; color: var(--text-secondary);">unit</span>
+        </div>
+        <div>
+          <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Laboratory Range</span>
+          <div id="modalDetailRange" style="font-size: 1.1rem; font-weight: 700; font-family: var(--font-mono); margin-top: 4px;">0 - 0</div>
+          <span style="font-size: 0.76rem; color: var(--teal-primary);">Lab Printed</span>
+        </div>
+        <div>
+          <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Status &amp; Trend</span>
+          <div id="modalDetailStatusBadge" style="margin-top: 6px;">
+            <span class="badge-status normal">Normal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Goal Setter -->
+      <div style="background: var(--teal-light); border: 1px solid var(--teal-border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+        <h4 style="font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--teal-primary);">
+          <i data-lucide="target"></i> My Target for This Test
+        </h4>
+        <p id="modalGoalStatus" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 10px;">
+          No personal target set yet.
+        </p>
+        <div class="btn-group">
+          <input type="number" step="0.1" id="modalGoalInput" class="form-input" style="width: 130px; padding: 7px 12px; font-size: 0.88rem;" placeholder="Target value">
+          <button class="btn btn-primary btn-sm" onclick="setModalGoal()">
+            <i data-lucide="check" style="width: 14px; height: 14px;"></i> Set Goal
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="clearModalGoal()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Detail Trend Canvas -->
+      <div style="height: 200px; position: relative; margin-bottom: 20px;">
+        <canvas id="modalTrendCanvas"></canvas>
+      </div>
+
+      <!-- Simple Explanation & Factors -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+          <h4 style="font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <i data-lucide="info" style="color: var(--teal-primary);"></i> Simple Explanation (Gemini AI)
+          </h4>
+          <p id="modalDetailExplanation" style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+            Explanation of test significance...
+          </p>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+          <h4 style="font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <i data-lucide="help-circle" style="color: var(--status-low);"></i> Factors That Can Affect This Result
+          </h4>
+          <p id="modalDetailFactors" style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+            Hydration, fasting status, recent exercise, dietary changes, and time of blood collection.
+          </p>
+        </div>
+
+        <div style="background: var(--blue-light); border: 1px solid var(--blue-border); border-radius: var(--radius-md); padding: 14px;">
+          <h4 style="font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--blue-accent);">
+            <i data-lucide="stethoscope"></i> Discuss With Your Healthcare Professional
+          </h4>
+          <p id="modalDetailDoctorGuidance" style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+            Discuss any deviations with your physician to establish personalized target goals based on your complete medical history.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
